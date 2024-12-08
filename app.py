@@ -136,8 +136,7 @@ def predict_all_jobs_for_candidate(candidate_id):
                 job_suggestions.append(job_info)
 
         # Tính tổng số trang
-        total_pages = int(np.ceil(total_jobs / page_size))
-
+        total_pages = int(np.ceil(len(job_suggestions) / page_size))
         # Định dạng phản hồi
         data = {
             "items": job_suggestions,  # Danh sách các công việc
@@ -145,7 +144,7 @@ def predict_all_jobs_for_candidate(candidate_id):
                 "count": len(job_suggestions),  # Số công việc trên trang hiện tại
                 "current_page": current,  # Trang hiện tại
                 "per_page": page_size,  # Số lượng công việc mỗi trang
-                "total": total_jobs,  # Tổng số công việc phù hợp
+                "total":  len(job_suggestions),  # Tổng số công việc phù hợp
                 "total_pages": total_pages  # Tổng số trang
             }
         }
