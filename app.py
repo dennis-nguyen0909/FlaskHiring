@@ -59,11 +59,23 @@ def predict_all_jobs_for_candidate(candidate_id):
         
         # Lấy dữ liệu công việc từ MongoDB
         jobs = list(jobs_collection.find())  # Lấy tất cả công việc
+        jobs = list(jobs_collection.find({}, {
+            "title": 1,
+            "job_type":1,
+            "district_id":1,
+            "city_id":1,
+            "type_money":1,
+            "user_id":1,
+            "ward_id":1,
+            "salary_range":1,
+            "is_negotiable":1,
+            "skills":1
+            }))  # Lấy tất cả công việc, chỉ lấy trường "title"
 
         # Lấy kỹ năng của ứng viên
         candidate_skills_ids = candidate.get('skills', [])
         skills_al = list(
-            skills_collection.find({"_id": {"$in": [ObjectId(skill_id) for skill_id in candidate_skills_ids]}}))
+                skills_collection.find({"_id": {"$in": [ObjectId(skill_id) for skill_id in candidate_skills_ids]}}, {"name": 1}))
         candidate_skills = [skill['name'] for skill in skills_al]
         candidate_skills = [skill.strip().lower() for skill in candidate_skills]
 
@@ -112,107 +124,16 @@ def predict_all_jobs_for_candidate(candidate_id):
         for idx in paginated_indices:
             job = jobs[idx]
             # Lấy chi tiết job type, city, district, ward và employer như trong đoạn mã gốc
-            # Thêm phần thông tin công việc vào job_suggestions
-            similarity = combined_similarity_scores[idx]
-            job_info = serialize_object(job)  # Serialize full job details
-            job_info["similarity"] = similarity  # Add similarity score to job info
-            if similarity > 0:
-                job_suggestions.append(job_info)
-
-        # Tính tổng số trang
-        total_pages = int(np.ceil(len(job_suggestions) / page_size))
-
-        data = {
-            "items": job_suggestions,
-            "meta": {
-                "count": len(job_suggestions),
-                "current_page": current,
-                "per_page": page_size,
-                "total": len(job_suggestions),
-                "total_pages": total_pages
-            }
-        }
-        response_data = {
-            "data": data,
-            "message": "Success",
-            "statusCode": 201
-        }
-
-        return jsonify(response_data)
-
-    except Exception as e:
-        print(traceback.format_exc())
-        return jsonify({"error": str(e)}), 400
-
-    try:
-        # Lấy thông tin trang hiện tại và kích thước trang từ query parameters
-        current = int(request.args.get('current', 1))  # Default to page 1
-        page_size = int(request.args.get('pageSize', 10))  # Default to 10 items per page
-
-        # Lấy thông tin ứng viên từ MongoDB
-        candidate = candidates_collection.find_one({"_id": ObjectId(candidate_id)})
-        if not candidate:
-            return jsonify({"error": f"Không tìm thấy ứng viên {candidate_id}."}), 404
-        
-        # Lấy dữ liệu công việc từ MongoDB
-        jobs = list(jobs_collection.find())  # Lấy tất cả công việc
-
-        # Lấy kỹ năng của ứng viên
-        candidate_skills_ids = candidate.get('skills', [])
-        skills_al = list(
-            skills_collection.find({"_id": {"$in": [ObjectId(skill_id) for skill_id in candidate_skills_ids]}}))
-        candidate_skills = [skill['name'] for skill in skills_al]
-        candidate_city = candidate.get("city_id")
-        
-        # Lấy kỹ năng yêu cầu của công việc
-        job_skills = []
-        for job in jobs:
-            job_skill_ids = job.get('skills', [])
-            job_skills_data = list(
-                skills_employers_collection.find({"_id": {"$in": [ObjectId(skill_id) for skill_id in job_skill_ids]}}))
-            job_skills.append([skill['name'] for skill in job_skills_data])
-
-        # Chuẩn hóa dữ liệu kỹ năng (loại bỏ khoảng trắng thừa)
-        candidate_skills = [skill.strip().lower() for skill in candidate_skills]
-        job_skills = [[skill.strip().lower() for skill in job_skill_list] for job_skill_list in job_skills]
-
-        # Chuyển đổi kỹ năng của ứng viên và công việc thành ma trận nhị phân
-        mlb = MultiLabelBinarizer()
-        
-        # Thêm các kỹ năng của ứng viên vào tập hợp kỹ năng công việc nếu cần thiết
-        mlb.fit(job_skills)  # Fit trước vào tất cả các kỹ năng công việc
-        mlb.classes_ = np.unique(np.concatenate([mlb.classes_, candidate_skills]))  # Đảm bảo các kỹ năng ứng viên được đưa vào
-
-        # Ma trận kỹ năng công việc
-        job_skills_matrix = mlb.transform(job_skills)
-
-        # Chuyển kỹ năng của ứng viên thành ma trận nhị phân
-        candidate_skills_matrix = mlb.transform([candidate_skills])
-
-        # Tính toán độ tương đồng cosine giữa kỹ năng ứng viên và kỹ năng công việc
-        similarity_scores = cosine_similarity(candidate_skills_matrix, job_skills_matrix)[0]
-
-        # Sắp xếp công việc theo mức độ phù hợp (độ tương đồng)
-        sorted_job_indices = np.argsort(similarity_scores)[::-1]  # Sắp xếp từ cao xuống thấp
-
-        # Pagination logic
-        total_jobs = len(sorted_job_indices)  # Tổng số công việc
-        start_idx = (current - 1) * page_size
-        end_idx = start_idx + page_size
-        paginated_indices = sorted_job_indices[start_idx:end_idx]  # Lấy công việc cho trang hiện tại
-
-        # Tạo danh sách các công việc phù hợp
-        job_suggestions = []
-        for idx in paginated_indices:
-            job = jobs[idx]
-
-            # Lấy job_type_id từ job và tìm chi tiết job_type trong job_types_collection
             job_type_id = job.get('job_type')
             job_type_detail = job_types_collection.find_one({"_id": ObjectId(job_type_id)})
             employer_id = job.get('user_id')
             employer_detail = employers_collection.find_one({"_id": ObjectId(employer_id)}, {
-                "password": 0,
-                "progress_setup": 0,
+                "avatar": 1,
+                "avatar_company": 1,
+                "city_id":1,
+                "company_name":1,
+                "ward_id":1
+    
             })
             city_id = job.get('city_id')
             district_id = job.get('district_id')
@@ -243,23 +164,22 @@ def predict_all_jobs_for_candidate(candidate_id):
                 job["type_money"] = type_money_detail
 
             job_info = serialize_object(job)  # Serialize full job details
-            similarity = similarity_scores[idx]
+            similarity = combined_similarity_scores[idx]
             job_info["similarity"] = similarity  # Add similarity score to job info
             if similarity > 0:
-                job_info["similarity"] = similarity  # Add similarity score to job info
                 job_suggestions.append(job_info)
 
         # Tính tổng số trang
         total_pages = int(np.ceil(len(job_suggestions) / page_size))
-        # Định dạng phản hồi
+
         data = {
-            "items": job_suggestions,  # Danh sách các công việc
+            "items": job_suggestions,
             "meta": {
-                "count": len(job_suggestions),  # Số công việc trên trang hiện tại
-                "current_page": current,  # Trang hiện tại
-                "per_page": page_size,  # Số lượng công việc mỗi trang
-                "total": len(job_suggestions),  # Tổng số công việc phù hợp
-                "total_pages": total_pages  # Tổng số trang
+                "count": len(job_suggestions),
+                "current_page": current,
+                "per_page": page_size,
+                "total": len(job_suggestions),
+                "total_pages": total_pages
             }
         }
         response_data = {
@@ -273,6 +193,7 @@ def predict_all_jobs_for_candidate(candidate_id):
     except Exception as e:
         print(traceback.format_exc())
         return jsonify({"error": str(e)}), 400
+
 
 @app.route('/suggests_by_city/<candidate_id>', methods=['GET', 'OPTIONS'])
 def suggest_jobs_by_city(candidate_id):
@@ -290,7 +211,7 @@ def suggest_jobs_by_city(candidate_id):
         candidate_city_id = candidate.get('city_id')
 
         # Lấy dữ liệu công việc từ MongoDB và lọc theo city_id
-        jobs = list(jobs_collection.find({"city_id": candidate_city_id}))  # Chỉ lấy các công việc cùng city_id
+        jobs = list(jobs_collection.find({}, {"_id": 1, "skills": 1, "title": 1, "job_type": 1, "user_id": 1, "city_id": 1, "district_id": 1, "ward_id": 1, "type_money": 1}))
 
         # Pagination logic
         total_jobs = len(jobs)  # Tổng số công việc
@@ -309,6 +230,7 @@ def suggest_jobs_by_city(candidate_id):
             employer_detail = employers_collection.find_one({"_id": ObjectId(employer_id)}, {
                 "password": 0,
                 "progress_setup": 0,
+                "account_type":0
             })
 
             city_id = job.get('city_id')
