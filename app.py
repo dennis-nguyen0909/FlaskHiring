@@ -13,7 +13,7 @@ load_dotenv()
 # Lấy các thông tin từ biến môi trường
 MONGO_URL =os.getenv("MONGO_URL")
 # Kết nối MongoDB bằng thông tin từ biến môi trường
-client = MongoClient(f"${MONGO_URL}")
+client = MongoClient(MONGO_URL)
 print("client",client)
 app = Flask(__name__)
 # app.config['CORS_HEADERS'] = 'Content-Type'
