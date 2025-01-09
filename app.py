@@ -6,15 +6,27 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 from flask_cors import CORS
 import traceback
+from dotenv import load_dotenv
+import os
+# Load environment variables from .env file
+load_dotenv()
+# Lấy các thông tin từ biến môi trường
+MONGO_USER = os.getenv('MONGO_USER')
+MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
+MONGO_HOST = os.getenv('MONGO_HOST')
+MONGO_PORT = os.getenv('MONGO_PORT')
+MONGO_DB = os.getenv('MONGO_DB')
+
+# Kết nối MongoDB bằng thông tin từ biến môi trường
+client = MongoClient(f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{MONGO_HOST}:{MONGO_PORT}/{MONGO_DB}?authSource=admin")
 app = Flask(__name__)
 # app.config['CORS_HEADERS'] = 'Content-Type'
 # Kích hoạt CORS cho tất cả các đường dẫn và cho phép tất cả các nguồn (origin)
-CORS(app,origins=["http://localhost:5173"], supports_credentials=True)
+CORS(app,origins=["http://localhost:5173","https://frontend-hiring-minhduys-projects.vercel.app"], supports_credentials=True)
 # CORS(app, supports_credentials=True)
 
 # Kết nối MongoDB
-client = MongoClient("mongodb://root:123456@localhost:27017/dennis?authSource=admin")
-db = client['dennis']
+db = client[MONGO_DB]
 jobs_collection = db['jobs']
 candidates_collection = db['users']
 employers_collection = db['users']
