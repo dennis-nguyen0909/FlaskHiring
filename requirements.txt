@@ -1,6 +1,6 @@
 Flask==2.3.2
-pymongo==3.12.0  # Điều chỉnh phiên bản
+pymongo==3.12.0
 scikit-learn==1.3.0
-numpy==1.26.0
-flask-cors==3.1.1
+numpy==1.24.0  # Điều chỉnh phiên bản
+flask-cors==5.0.0  # Sử dụng phiên bản mới hơn
 python-dotenv==1.0.0
