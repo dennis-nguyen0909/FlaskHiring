@@ -11,14 +11,10 @@ import os
 # Load environment variables from .env file
 load_dotenv()
 # Lấy các thông tin từ biến môi trường
-MONGO_USER = os.getenv('MONGO_USER')
-MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
-MONGO_HOST = os.getenv('MONGO_HOST')
-MONGO_PORT = os.getenv('MONGO_PORT')
-MONGO_DB = os.getenv('MONGO_DB')
-
+MONGO_URL =os.getenv("MONGO_URL")
 # Kết nối MongoDB bằng thông tin từ biến môi trường
-client = MongoClient(f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}@{MONGO_HOST}:{MONGO_PORT}/{MONGO_DB}?authSource=admin")
+client = MongoClient(f"${MONGO_URL}")
+print("client",client)
 app = Flask(__name__)
 # app.config['CORS_HEADERS'] = 'Content-Type'
 # Kích hoạt CORS cho tất cả các đường dẫn và cho phép tất cả các nguồn (origin)
