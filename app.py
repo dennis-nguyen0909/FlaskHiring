@@ -4,6 +4,9 @@ from pymongo import MongoClient
 from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
+from services.pdf_service import extract_text_from_pdf
+from services.gemini_service import analyze_cv
+from services.api import post_to_api,updateUser
 import numpy as np
 from flask_cors import CORS
 import traceback
@@ -291,6 +294,69 @@ def suggest_jobs_by_city(candidate_id):
 @app.route("/")
 def helloWorld():
   return "Hello, cross-origin-world!"
+
+UPLOAD_FOLDER = "./uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+@app.route("/analyze-cv", methods=["POST"])
+def analyze():
+    file = request.files.get("cv_file")
+    user_id = request.form.get("user_id")
+    auth_header = request.headers.get("Authorization")
+    token = auth_header.split(" ")[1]
+    if not file:
+        return jsonify({"error": "Thiếu file CV"}), 400
+    if not user_id:
+        return jsonify({"error": "Thiếu user_id"}), 400
+    pdf_path = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(pdf_path)
+
+    try:
+        text = extract_text_from_pdf(pdf_path)
+        result = analyze_cv(text)  # bỏ user_id nếu không cần
+        if result.get("educations"):
+            post_to_api("educations", result["educations"],token,user_id)
+
+        if result.get("projects"):
+            post_to_api("projects", result["projects"],token,user_id)
+
+        if result.get("skills"):
+            post_to_api("skills", result["skills"],token,user_id)
+
+        if result.get("certificates"):
+            post_to_api("certificates", result["certificates"],token,user_id)
+
+        if result.get("experiences"):
+            post_to_api("work-experiences", result["experiences"],token,user_id)
+
+        if result.get("courses"):
+            post_to_api("courses", result["courses"],token,user_id)
+
+        if result.get("prizes"):
+            post_to_api("prizes", result["prizes"],token,user_id)
+        user_info = {}
+
+        if result.get("total_experience_months") is not None:
+            user_info["total_experience_months"] = result["total_experience_months"]
+
+        if result.get("total_experience_years") is not None:
+            user_info["total_experience_years"] = result["total_experience_years"]
+
+        if result.get("no_experience") is not None:
+            user_info["no_experience"] = result["no_experience"]
+
+        if result.get("summary"):
+            user_info["description"] = result["summary"]
+
+        if result.get("role"):
+            user_info["role_name"] = result["role"]
+
+        if user_info:
+            updateUser("users", user_info, token, user_id)
+        return jsonify({"message": "Success", "statusCode": 201,"data":[]})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
      app.run(host='0.0.0.0', port=5001, debug=True) 

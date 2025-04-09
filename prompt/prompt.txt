@@ -1,0 +1,120 @@
+"""
+Phân tích CV sau và đánh giá theo các tiêu chí:
+
+* Kỹ năng lập trình (0-10 điểm)
+* Kinh nghiệm làm việc (0-10 điểm)
+* Dự án cá nhân (0-10 điểm)
+* Học vấn (0-10 điểm)
+
+Trả về kết quả dưới dạng JSON. Chỉ trả về JSON, không có giải thích gì thêm.
+Trong JSON trả về, sử dụng chính xác các key sau:
+- "summary"
+- "skills"
+- "projects"
+- "educations"
+- "experiences"
+- "certificates"
+- "courses"
+- "role"
+- "prizes"
+- "no_experience" : true hoặc false
+- "total_experience_months" : số tháng
+- "total_experience_years"  : số năm
+
+Dữ liệu học vấn (Educations) phải có định dạng như sau:
+[
+    {{
+        "currently_studying": true hoặc false,
+        "description": "Mô tả về quá trình học",
+        "major": "Ngành học",
+        "school": "Tên trường",
+        "start_date": "YYYY-MM-DDTHH:mm:ss.sssZ",
+        "end_date": "YYYY-MM-DDTHH:mm:ss.sssZ",
+        "user_id": "67bae265c695545504b11b65"
+    }}
+]
+
+
+Dữ liệu kinh nghiệm (`experiences`) phải có định dạng như sau:
+[
+    {{
+        "company": "Tên công ty",
+        "currently_working": true hoặc false,
+        "description": "Mô tả công việc",
+        "end_date": null nếu vẫn đang làm, hoặc "YYYY-MM-DDTHH:mm:ss.sssZ" nếu đã nghỉ,
+        "position": "Chức vụ",
+        "start_date": "YYYY-MM-DDTHH:mm:ss.sssZ",
+        "user_id": "67bae265c695545504b11b65"
+    }}
+]
+
+Dữ liệu kỹ năng (`skills`) phải có định dạng như sau:
+[
+    {{
+        "description": "Mô tả kỹ năng",
+        "evalute": Số điểm đánh giá (1-10) nếu không có thì để 0,
+        "name": "Tên kỹ năng",
+        "user_id": "67bae265c695545504b11b65"
+    }}
+]
+
+Dữ liệu chứng chỉ (`certificates`) phải có định dạng như sau:
+[
+    {{
+        "candidate_id": "67bae265c695545504b11b65",
+        "certificate_name": "Tên chứng chỉ",
+        "img_certificate": null hoặc "URL ảnh chứng chỉ",
+        "is_not_expired": true hoặc false,
+        "organization_name": "Tên tổ chức cấp chứng chỉ",
+        "start_date": "YYYY-MM-DDTHH:mm:ss.sssZ"
+    }}
+]
+
+Dữ liệu giải thưởng (`prizes`) phải có định dạng như sau:
+[
+    {{
+        "date_of_receipt": "YYYY-MM-DDTHH:mm:ss.sssZ",
+        "organization_name": "Tên tổ chức trao giải",
+        "prize_image": null hoặc "URL ảnh giải thưởng",
+        "prize_link": null hoặc "URL thông tin giải thưởng",
+        "prize_name": "Tên giải thưởng",
+        "user_id": "67bae265c695545504b11b65"
+    }}
+]
+
+Dữ liệu khóa học (`courses`) phải có định dạng như sau:
+[
+    {{
+        "course_image": null hoặc "URL ảnh khóa học",
+        "course_link": null hoặc "URL khóa học",
+        "course_name": "Tên khóa học",
+        "description": "Mô tả khóa học",
+        "end_date": "YYYY-MM-DDTHH:mm:ss.sssZ",
+        "organization_name": "Tên tổ chức cung cấp khóa học",
+        "start_date": "YYYY-MM-DDTHH:mm:ss.sssZ",
+        "user_id": "67bae265c695545504b11b65"
+    }}
+]
+
+Dữ liệu dự án (`projects`) phải có định dạng như sau:
+[
+    {{
+        "customer_name": "Tên khách hàng",
+        "description": "Mô tả dự án",
+        "end_date": "YYYY-MM-DDTHH:mm:ss.sssZ",
+        "location": "Vị trí làm việc",
+        "mission": "Mô tả nhiệm vụ",
+        "project_image": null hoặc "URL hình ảnh dự án",
+        "project_link": null hoặc "URL dự án",
+        "project_name": "Tên dự án",
+        "start_date": "YYYY-MM-DDTHH:mm:ss.sssZ",
+        "team_number": "Số lượng thành viên trong nhóm",
+        "technology": "Công nghệ sử dụng",
+        "user_id": "67bae265c695545504b11b65"
+    }}
+]
+
+
+CV:
+{cv_text}
+"""
