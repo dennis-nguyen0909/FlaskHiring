@@ -20,9 +20,9 @@ print("client",client)
 app = Flask(__name__)
 # app.config['CORS_HEADERS'] = 'Content-Type'
 # Kích hoạt CORS cho tất cả các đường dẫn và cho phép tất cả các nguồn (origin)
-CORS(app,origins=["http://localhost:5173","https://frontend-hiring-minhduys-projects.vercel.app"], supports_credentials=True)
+CORS(app,origins=["http://localhost:5173","https://frontend-hiring-minhduys-projects.vercel.app","https://hire-dev.online"], supports_credentials=True)
 # CORS(app, supports_credentials=True)
-
+# check cicd
 # Kết nối MongoDB
 db = client[MONGO_DB]
 jobs_collection = db['jobs']
@@ -211,7 +211,8 @@ def suggest_jobs_by_city(candidate_id):
         candidate_city_id = candidate.get('city_id')
 
         # Lấy dữ liệu công việc từ MongoDB và lọc theo city_id
-        jobs = list(jobs_collection.find({}, {"_id": 1, "skills": 1, "title": 1, "job_type": 1, "user_id": 1, "city_id": 1, "district_id": 1, "ward_id": 1, "type_money": 1}))
+        jobs = list(jobs_collection.find({}, {"_id": 1, "skills": 1, "title": 1, "job_type": 1, "user_id": 1, "city_id": 1, "district_id": 1, "ward_id": 1, "type_money": 1,"salary_range":1,  "is_negotiable":1,
+            "skills":1}))
 
         # Pagination logic
         total_jobs = len(jobs)  # Tổng số công việc
