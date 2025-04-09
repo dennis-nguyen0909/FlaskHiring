@@ -27,6 +27,11 @@ jobs:
 
           # Cài thư viện Python
           pip install -r requirements.txt
+          pip install pymongo
+          pip install scikit-learn
+          pip install flask
+          pip install flask-cors
+          pip install python-dotenv
 
           # Reload Flask app qua pm2
           pm2 reload flask-app
