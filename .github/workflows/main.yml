@@ -1,0 +1,32 @@
+name: Hire Dev
+
+on:
+  push:
+    branches: [production]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Deploying Hire Dev Flask App
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: 22
+        script: |
+          cd /home/ubuntu/FlaskHiring
+          git fetch origin
+          git checkout production
+          git pull
+
+          # Kích hoạt venv nếu bạn có
+          source venv/bin/activate
+
+          # Cài thư viện Python
+          pip install -r requirements.txt
+
+          # Reload Flask app qua pm2
+          pm2 reload flask-app
